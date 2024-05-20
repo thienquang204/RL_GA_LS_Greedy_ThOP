@@ -4,6 +4,8 @@
 using namespace std;
 MTRand rng;
 
+
+// Dữ liệu mỗi đồ vật
 struct Item {
     int index;
     int profit;
@@ -11,6 +13,8 @@ struct Item {
     int index_node;
 };
 
+
+// Dữ liệu mỗi đỉnh
 struct Point {
     int index;
     double x;
@@ -18,7 +22,7 @@ struct Point {
     vector<Item> bags;
 };
 
-
+// Sinh hoán vị ngẫu nhiên, Fisher arrangement algorithm
 template <typename T>
 void randomshuffle(vector<T> &arr) {
     int n = arr.size();
@@ -50,17 +54,17 @@ int UPPER_BOUND;
 
 
 
-
+// Lời giải
 
 struct Solution {
-    float time_travel;
-    long int w_profit = 0;
-    long int profit = 0;
-    vector<int> item_taken;
-    vector<int> city_travel;
-    bool valid = true;
+    float time_travel; // Thời gian di chuyển
+    long int w_profit = 0; // Khối lượng
+    long int profit = 0; // Lợi nhuận
+    vector<int> item_taken; // Danh sách item
+    vector<int> city_travel; // Danh sách đỉnh
+    bool valid = true; // lời giải đúng => true, ngược lại false
 
-
+    // Xây dựng item
     void constructCity() {
         city_travel.clear();
         vector<bool> visit(DIMENSION+1,false);
@@ -75,7 +79,7 @@ struct Solution {
         
         return;
     };
-
+    // Sinh hoán vị ngẫu nhiên
     void shuffle_city() {
         int n = city_travel.size();
         if (n <= 2) return;
@@ -90,7 +94,7 @@ struct Solution {
 
         return;
     }
-
+    // Fix bug cho tạo item mới
     void repair_travel(vector<int> &travel) {
         vector<int> visit(DIMENSION+1,false);
         for (auto i: item_taken) {
@@ -106,7 +110,7 @@ struct Solution {
         }
         return;
     }
-
+    // Tạo item mới
     void mutation_item() {
         vector<int> bin_1(ITEMS+1,0);
         for (auto i: item_taken) {
@@ -124,6 +128,8 @@ struct Solution {
     }
 
 
+
+    // Trường hợp cần bỏ những đỉnh không có tác dụng
     void mutation_city() {
         vector<int> bin_1(DIMENSION+1,false);
         for (auto i : city_travel) {
@@ -144,7 +150,7 @@ struct Solution {
         city_travel.push_back(possible[0]);
         return;
     }
-
+    // Tối ưu thời gian bằng LS
     bool optimize_time() {
         if (city_travel.size() <= 2) return true;
         float very_old_time = time_travel;
@@ -166,7 +172,7 @@ struct Solution {
         }
         return true;
     }
-
+    // Hàm di chuyển tới đỉnh gần nhất
     bool nearestNeighbor_insertion() {
         vector<int> visit(DIMENSION+1,false);
         for (auto i: city_travel) {
@@ -194,7 +200,7 @@ struct Solution {
         }
         return true;
     }
-
+    // Thử sinh hoán vị rồi mới Local Search, để tối ưu thời gian
     void ILS_optimize_time() {
         Solution s;
         if (city_travel.size() <= 2) return;
@@ -210,7 +216,7 @@ struct Solution {
         }
         return;
     }
-
+    // Ăn tham theo ưu tiên các item, thử nghiệm thất bại
     void adapt_more_item() {
         int old_profit = profit;
         vector<bool> bin(ITEMS+1,false);
@@ -287,7 +293,7 @@ struct Solution {
         return;
     }
 
-
+    // ĂN tham ngẫu nhiên các item
     void GRASP_adapt_item() {
         int old_profit = profit;
         vector<bool> taken(ITEMS+1,false);
@@ -388,7 +394,7 @@ struct Solution {
         //     cout << "YES IMPROVE";
         // }
     }
-
+    // Thay đổi đường đi để thử hoán vị thời gian, thoát cực trị địa phương
     void shaking_time() {
         int n = city_travel.size();
         if (n <= 2) return;
@@ -402,7 +408,7 @@ struct Solution {
 
     
 
-
+    // Kiểm tra lời giải
     bool checkerSolution(Solution &s, bool enable) {
         s.city_travel.push_back(DIMENSION);
         vector<int> Weight(DIMENSION+1,0);
@@ -444,7 +450,7 @@ struct Solution {
         }
         return valid = true;
     };
-
+    // TÍnh toán nhanh thi thêm đỉnh mới
     void fast_calculation_adding(int i, int j) {
         int n = city_travel.size();
         int last_city = city_travel[n-2];
@@ -465,13 +471,14 @@ struct Solution {
 
 struct Permutation_solver {
     vector<int> destination;
-    
+    // Khởi tạo lúc đầu
     void construct() {
         for (int i = 1; i < DIMENSION; i++) {
             destination.push_back(i);
         }
         return;
     }
+    // Tạo lời giải mới dựa trên GA và LS, trong trường hợp có kết quả tốt hơn
 
     void create_new_perm(vector<int> &seed_perm) {
         Solution s;
@@ -519,12 +526,12 @@ struct Permutation_solver {
 
         return;
     }
-
+    // Sinh hoán vị ngẫu nhiên
     void random_shuffle() {
         randomshuffle<int>(destination);
         return;
     }
-
+    // Tạo lời giải TSP mới bằng GA và Random Local Search, khi không có lời giải tối hơn
     void genetic_new_perm(vector<int> &seed_perm) {
         random_shuffle();
         set<int> holder;
@@ -551,12 +558,16 @@ Permutation_solver TSP_solver;
 
 
 struct Algorithm {
+    // Giải thuật chính
     Solution random_Path_Reinforcement_Heuristic() {
+        // Nhập danh sách các đỉnh từ lời giải TSP
         vector<int> city;
         for (auto i: TSP_solver.destination) {
             city.push_back(i);
         }
         
+
+        // Nhập danh sách các đồ vật vào vector để xét
         vector<int> item_list;
         for (auto i: city) {
             for (auto x: graph[i].bags) {
@@ -564,6 +575,8 @@ struct Algorithm {
             }
         }
         
+
+        // Tạo bảng thông số để Q-Learning, penalty cho lựa chọn sai có hằng số là 0.79, lựa chọn đúng là 2.23
         int n = (int)item_list.size();
         vector<vector<float>> reinforcement_table(n,vector<float>(2,0.5));
         float alpha_reward = 2.23;
@@ -576,6 +589,8 @@ struct Algorithm {
         vector<int> best_solution_choice(n,1);
 
         for (int i = 1; i <= 1000; i++) {
+
+            // Thực hiện lời giải
             Solution s;
             s.city_travel.push_back(1);
             vector<bool> visit(DIMENSION+1,false);
@@ -589,6 +604,7 @@ struct Algorithm {
                     visit[bags[item_list[i]].index_node] = true;
                     checker = 1;
                 }
+                // Giảm khối lượng tính toán bằng cách tận dụng thuật toán tính nhnah mõi khi có thể
                 if (checker == 1) {
                     s.fast_calculation_adding(bags[item_list[i]].index,bags[item_list[i]].index_node);
                 } else {
@@ -608,7 +624,7 @@ struct Algorithm {
                     s.checkerSolution(s,false);
                 }
             }
-
+            // Dựa vào chất lượng lời giải cải thiện bảng RL
             if (s.profit > best_solution.profit) {
                 float score_reward = alpha_reward/(UPPER_BOUND+1-s.profit);
                 float score_penalty = belta_penalty/s.profit;
@@ -658,16 +674,21 @@ struct Algorithm {
 
 
 
-
+// Hàm cập nhập
 
 void update_bestSolution(Solution &b) {
+    // Tạo một lời giải mới
     Solution a;
     Algorithm Algo;
+
+    // Dùng thuật giải RL_GA_LS để giải
     a = Algo.random_Path_Reinforcement_Heuristic();
-    a.adapt_more_item();
-    // a.GRASP_adapt_item();
 
+    // a.adapt_more_item();
+    // Dùng Random Greedy để cải thiện lời giải
+    a.GRASP_adapt_item();
 
+    // Nếu kết quả tốt hơn thì tạo hoán vị mới bằng GA, còn không thì tối ưu thời gian rồi dùng GA
     if (a.profit > b.profit || (a.profit == b.profit && a.time_travel < b.time_travel)) {
         b = a;
         b.checkerSolution(b,false);
@@ -693,6 +714,7 @@ int RUNTIME;
 
 
 int main (int argc, char *argv[]) {
+    // Nhập dữ liệu
     ios_base::sync_with_stdio(0);
     std::cin.tie(0); std::cout.tie(0);
 
@@ -702,6 +724,8 @@ int main (int argc, char *argv[]) {
 
     string instanceFile;
     
+
+    // 3 thông số: tên file, seed random, thời gian chạy file tính bằng s
     sscanf(argv[1],"%s", parameterStr); instanceFile = string(parameterStr);
     int rngSeed; sscanf(argv[2],"%d", &rngSeed);
     sscanf(argv[3],"%d",&RUNTIME);
@@ -722,6 +746,8 @@ int main (int argc, char *argv[]) {
         cin >> bags[i].index >> bags[i].profit >> bags[i].weight >> bags[i].index_node;
         graph[bags[i].index_node].bags.push_back(bags[i]);
     }
+
+    // TÍnh khoảng cách giữa các đỉnh
     
     dist.assign(DIMENSION+1, vector<double>(DIMENSION+1,0));
     for (int i = 1; i <= DIMENSION; i++) {
@@ -732,6 +758,8 @@ int main (int argc, char *argv[]) {
         }
     }
 
+    // Sort độ ưu tiên của đồ vật tại từng đỉnh
+
     for (auto x: graph) {
         sort(x.bags.begin(),x.bags.end(),
             [&](Item &a, Item &b){
@@ -739,6 +767,8 @@ int main (int argc, char *argv[]) {
             }); 
     }
 
+
+    // Tìm cận trên để update thông số trong thuật toán RL, dùng thuật ăn tham để tìm cận trong O(nlogn)
     UPPER_BOUND = 0;
     vector<int> knapsack_solver;
     for (auto x: bags) {    
@@ -758,6 +788,9 @@ int main (int argc, char *argv[]) {
     }
     // vector<double> prob_item(ITEMS+1,0.5);
 
+
+
+    // Thời gian chạy nếu muốn thay đổi thì chỉnh lại seed này
     RUNTIME = min(ITEMS/10,300);
     Solution s;
     Algorithm Algo;
@@ -768,6 +801,7 @@ int main (int argc, char *argv[]) {
     // Solution best_solution;
     // best_solution = s;
     // best_solution.checkerSolution(best_solution,false);
+    // Khời tạo lời giải TSP,sinh hoán vị ngẫu nhiên và tối ưu đường đi
     TSP_solver.construct();
 
     high_resolution_clock::time_point tStart = high_resolution_clock::now();
@@ -781,9 +815,11 @@ int main (int argc, char *argv[]) {
         //     cout << cnt_city[i] << " ";
         // }
         // cout << endl;
+        // Tính thời gian
         tEnd = high_resolution_clock::now();
         exec_time = duration_cast<duration<double>> (tEnd - tStart);
         if (exec_time.count() >= RUNTIME) {
+            // In kết quả sau khi ngừng thời gian chạy
             s = best_solution;
             s.city_travel.push_back(DIMENSION);
             s.checkerSolution(s,false);
@@ -801,8 +837,10 @@ int main (int argc, char *argv[]) {
             // map_elite.print_Solution();
             exit(0);
         }
-
+        // Tìm lời giải mới và cập nhập lời giải tối ưu
         update_bestSolution(best_solution);
+
+
         // cout << best_solution.profit << "\n";
         //  cout << s1.profit << endl;
         // cout << s1.profit << endl
